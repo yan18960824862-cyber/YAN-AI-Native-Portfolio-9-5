@@ -485,3 +485,35 @@ html.intro-locked,body.intro-locked,body.lanyard-active,body.folder-active{overf
   .external-film-cover small,.external-film-cover em{right:12px}.external-film-cover small{bottom:42px}.external-film-cover em{bottom:25px}
   .next-project,.selected-projects-end{margin-top:90px}
 }
+
+/* Hero-only font and live screen-space ink; retain existing sizes and layout. */
+#top .token-status > span,
+#top .token-status > p,
+#top .prompt-device input,
+#top .hero-input {
+  font-family:var(--font-hero),Arial,"Microsoft YaHei",sans-serif;
+}
+#top .token-status > span {font-weight:500;color:#898680}
+#top .token-status > p {font-weight:600;color:#898680}
+#top .prompt-device input {font-weight:400;color:#898680;width:100%;caret-color:#343230}
+#top .prompt-device input:focus {color:#55524f}
+#top .hero-copy {position:relative;animation:heroTextFloat 7s ease-in-out infinite}
+#top .token-status > p {animation-delay:-2.5s}
+#top .hero-input {position:relative;display:block;min-width:0;width:100%;font-size:15px;font-weight:400}
+#top .hero-ink,
+#top .hero-ink span {font:inherit;letter-spacing:inherit}
+#top .hero-ink {position:absolute;inset:0;display:block;pointer-events:none!important;user-select:none;overflow:hidden}
+#top .hero-ink * {pointer-events:none!important}
+#top .hero-ink-defs {position:absolute;width:0;height:0;overflow:hidden}
+#top .hero-ink-color {position:absolute;inset:0;display:block;white-space:pre;mask-repeat:no-repeat;-webkit-mask-repeat:no-repeat}
+#top .hero-ink-copy {display:block;white-space:pre}
+#top .hero-input .hero-ink {bottom:1px}
+#top .hero-input .hero-ink-color {display:flex;align-items:center}
+#top .hero-input:focus-within .hero-ink {visibility:hidden}
+@keyframes heroTextFloat {
+  0%,100% {opacity:.9;transform:translateY(0)}
+  50% {opacity:1;transform:translateY(-1px)}
+}
+@media(prefers-reduced-motion:reduce) {
+  #top .hero-copy {animation:none}
+}

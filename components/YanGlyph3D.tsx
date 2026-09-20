@@ -37,30 +37,79 @@ function parseGlyph(svg: string) {
   return { beads, aspect: width / height };
 }
 
-function GlyphObject({ beads }: { beads: Bead[] }) {
+function GlyphObject({ beads, label }: { beads: Bead[]; label: string }) {
   const group = useRef<THREE.Group>(null);
   const meshes = useRef<Array<THREE.Mesh | null>>([]);
   const pointer = useRef<THREE.Vector3 | null>(null);
   const base = useMemo(() => beads.map((bead) => new THREE.Vector3(bead.x, bead.y, 0)), [beads]);
+  const hoverOffsets = useRef<number[]>([]);
+  const phases = useMemo(() => {
+    const left = Math.min(...beads.map((bead) => bead.x));
+    const right = Math.max(...beads.map((bead) => bead.x));
+    const top = Math.max(...beads.map((bead) => bead.y));
+    const bottom = Math.min(...beads.map((bead) => bead.y));
+    const centerX = (left + right) / 2;
+    const centerY = (top + bottom) / 2;
+    const maxDistance = Math.max(...beads.map((bead) => Math.hypot(bead.x - centerX, bead.y - centerY)), 0.001);
+    return beads.map((bead, index) => {
+      // Use 0–100 spatial coordinates: parsed SVG positions are normalized,
+      // and Three.js Y points upward, opposite to the downward Y wave.
+      if (label === "Y") return -((top - bead.y) / (top - bottom || 1)) * 100 * 0.15;
+      if (label === "N") {
+        const distanceFromLeft = ((bead.x - left) / (right - left || 1)) * 100;
+        // Negative spatial phase delays the right side as time advances.
+        return -distanceFromLeft * 0.14;
+      }
+      const normalizedDistance = Math.hypot(bead.x - centerX, bead.y - centerY) / maxDistance;
+      // Fixed seeded variation, computed only with the bead data. Negative
+      // distance phase makes the pulse travel from the center outward.
+      const seed = Math.sin((index + 1) * 127.1) * 43758.5453;
+      const randomPhase = ((seed - Math.floor(seed)) - 0.5) * 0.24;
+      return -normalizedDistance * 8 + randomPhase;
+    });
+  }, [beads, label]);
+  const scaleLimits = useMemo(() => {
+    if (label !== "A") return [];
+    return beads.map((bead, index) => {
+      let limit = 1.15;
+      beads.forEach((neighbor, neighborIndex) => {
+        if (index === neighborIndex) return;
+        const spacing = Math.hypot(bead.x - neighbor.x, bead.y - neighbor.y);
+        const radii = bead.radius + neighbor.radius;
+        if (radii > 0) limit = Math.min(limit, spacing / radii);
+      });
+      // Existing SVG overlaps cannot be removed without changing its layout.
+      // Crowded beads breathe inward so animation never enlarges those overlaps.
+      return Math.max(1, limit);
+    });
+  }, [beads, label]);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     const ease = 1 - Math.exp(-delta * 8.5);
+    const time = clock.elapsedTime;
+    const speed = label === "A" ? 1.2 : label === "Y" ? 1.5 : 1.6;
+    const amplitude = label === "A" ? 0.135 : label === "Y" ? 0.17 : 0.18;
     meshes.current.forEach((mesh, index) => {
       if (!mesh) return;
       const origin = base[index];
-      const target = origin.clone();
+      const animationOffsetZ = Math.sin(time * speed + phases[index]) * amplitude;
+      let hoverTargetZ = 0;
       if (pointer.current) {
         const dx = origin.x - pointer.current.x;
         const dy = origin.y - pointer.current.y;
         const distance = Math.hypot(dx, dy);
         const influence = THREE.MathUtils.smoothstep(0.34 - distance, 0, 0.34);
-        if (influence > 0 && distance > 0.001) {
-          target.x += (dx / distance) * influence * 0.075;
-          target.y += (dy / distance) * influence * 0.075;
-          target.z += influence * 0.12;
-        }
+        hoverTargetZ = influence * 0.12;
       }
-      mesh.position.lerp(target, ease);
+      const hoverOffsetZ = THREE.MathUtils.lerp(hoverOffsets.current[index] ?? 0, hoverTargetZ, ease);
+      hoverOffsets.current[index] = hoverOffsetZ;
+      mesh.position.z = origin.z + animationOffsetZ + hoverOffsetZ;
+      if (label === "A") {
+        const breath = (Math.sin(time * speed + phases[index]) + 1) / 2;
+        // The same radial pulse drives depth and size, with the existing
+        // spacing guard preventing crowded beads from growing into neighbors.
+        mesh.scale.setScalar(THREE.MathUtils.lerp(0.85, scaleLimits[index], breath));
+      }
     });
   });
 
@@ -138,7 +187,7 @@ export function YanGlyph3D({ src, label }: { src: string; label: string }) {
       <hemisphereLight args={["#ffffff", "#f8f7f3", 0.35]} />
       <directionalLight position={[-3, 4, 6]} intensity={1.85} color="#ffffff" />
       <directionalLight position={[4, -2, 3]} intensity={0.35} color="#fff8fc" />
-      <GlyphObject beads={glyph.beads} />
+      <GlyphObject beads={glyph.beads} label={label} />
     </Canvas>
   </div>;
 }

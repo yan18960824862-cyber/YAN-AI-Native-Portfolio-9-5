@@ -1,0 +1,55 @@
+.panel {
+  position: absolute;
+  z-index: 6;
+  right: 24px;
+  top: 12vh;
+  width: min(400px, calc(50vw - 24vh - 40px));
+  max-height: 76vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  border: 1px solid #d6d3cd80;
+  border-radius: 3px;
+  background: #fffefae8;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 16px 48px #34323012;
+  color: #343230;
+  font: 14px/1.75 var(--font-sans);
+  text-align: left;
+  overflow-wrap: anywhere;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(20px) scale(0.95);
+  transform-origin: left center;
+  transition: opacity 260ms ease, transform 360ms cubic-bezier(.22,.8,.3,1), visibility 0s 360ms;
+}
+
+.panel[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+  transition-delay: 0s;
+}
+
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.heading > span, .panel h3 { font: 10px/1.5 var(--font-mono); letter-spacing: .07em; }
+.heading button { padding: 2px 8px; border: 0; background: none; color: inherit; cursor: pointer; font: 24px/1 var(--font-sans); }
+.panel h2 { margin: 20px 0 6px; font: 600 clamp(22px,2.2vw,32px)/1.08 var(--font-sans); letter-spacing: -.035em; }
+.panel .subtitle { margin: 0 0 22px; color: #77716c; font-size: 14px; }
+.panel p { margin: 0 0 16px; }
+.panel section { margin-top: 22px; padding-top: 16px; border-top: 1px solid #34323020; }
+.panel h3 { margin: 0 0 12px; }
+.panel ol { margin: 0; padding-left: 22px; }
+.panel ol li { margin-bottom: 10px; padding-left: 4px; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
+
+@media (max-width: 1000px) {
+  .panel { top: auto; bottom: 72px; right: 16px; width: min(420px, calc(100vw - 32px)); max-height: 42vh; padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { transform: none; transition: opacity 100ms ease, visibility 0s 100ms; }
+}

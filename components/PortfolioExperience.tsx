@@ -8,15 +8,7 @@ import { LanyardTag } from "./LanyardTag";
 import { YanGlyph3D } from "./YanGlyph3D";
 import { InlineVideo } from "./InlineVideo";
 
-type Project = { number: string; id: string; category: string; title: string; chinese: string; copy: string[]; cover: string; link: string; treatment: string; video?: string };
-const projects: Project[] = [
-  { number: "01", id: "space-field", category: "AI × VISUAL SYSTEM", title: "SPACE & FIELD", chinese: "空间与场域拼豆主视觉系统", copy: ["我先在 Figma 里把字排好，再把 SVG 接进自己搭的三维工具。", "改字、改厚度、改运动，都不用重新做一遍。"], cover: "/assets/project-marks/space-field-sticker.png", link: "https://xhslink.cn/o/436r0oH693t", treatment: "poster", video: "/videos/01-space-field.mp4" },
-  { number: "02", id: "graduation-vj", category: "AI × REAL-TIME SYSTEM", title: "GRADUATION VJ", chinese: "毕业季开幕式实时视觉系统", copy: ["最后交付是一条开幕式 VJ，", "但画面是在一套 Three.js 实时系统里一点点调出来的。"], cover: "/assets/vj/stage-cover.png", link: "https://weixin.qq.com/sph/AdPHIeILrL", treatment: "stage" },
-  { number: "03", id: "scenova", category: "AI × PRODUCT", title: "SCENOVA", chinese: "三维扫描无人机", copy: ["内部框架已经确定。", "我要做的是给它加一套能挡雨、够轻，而且方便换电池的外壳。"], cover: "/assets/drone/design-focus.jpg", link: "https://xhslink.cn/o/Aj5mp4dc8V4", treatment: "product", video: "/videos/03-scenova.mp4" },
-  { number: "04", id: "morning-tea", category: "AI × CHARACTER", title: "MORNING TEA ARENA", chinese: "早茶运动场", copy: ["三天里，我们把早茶点心和不同的体育动作配成角色，", "再把它们放进一座三层蒸笼运动场。"], cover: "/assets/tea/01.webp", link: "https://xhslink.cn/o/5hm7HNx2dzS", treatment: "character" },
-  { number: "05", id: "liminal-maze", category: "MOTION × SPACE", title: "LIMINAL MAZE", chinese: "Tokyo 3D Mapping", copy: ["建筑不是一块普通屏幕。", "画面要对准它的边缘、窗口和中轴，远距离看也要成立。"], cover: "/assets/mapping/cover.png", link: "https://xhslink.cn/o/3cdyF9ClixM", treatment: "mapping", video: "/videos/05-liminal-maze.mp4" },
-  { number: "06", id: "guozi", category: "AI × FILM", title: "GUOZI", chinese: "《二手玫瑰的果子》", copy: ["AI 很快给出很多画面。", "真正麻烦的是让人物、场景和光线，一直属于同一部片子。"], cover: "/assets/guozi/cover.webp", link: "https://xhslink.cn/o/6j2yFt8nRMM", treatment: "film", video: "/videos/06-guozi.mp4" },
-];
+import { projects, type Project } from "@/data/projects";
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
@@ -85,10 +77,14 @@ function FilmDissolve() {
 export function PortfolioExperience() {
   const [selectedTag, setSelectedTag] = useState<PosterProject | null>(null);
   const [openedProject, setOpenedProject] = useState<string | null>(null);
-  const tagProject = selectedTag ? {
+  const selectedDetails = projects.find((project) => project.id === selectedTag?.id);
+  const tagProject = selectedTag && selectedDetails ? {
     ...selectedTag,
-    chinese: projects.find((project) => project.id === selectedTag.id)?.chinese ?? "",
-    copy: projects.find((project) => project.id === selectedTag.id)?.copy.join(" ") ?? "",
+    chinese: selectedDetails.chinese,
+    copy: selectedDetails.copy.join(" "),
+    workflow: selectedDetails.workflow,
+    role: selectedDetails.role,
+    tools: selectedDetails.tools,
     sticker: `/assets/project-marks/${selectedTag.id}-sticker.png`,
   } : null;
   const enterSelectedProject = () => { if (!selectedTag) return; const id=selectedTag.id; setSelectedTag(null); setOpenedProject(id); window.setTimeout(() => document.getElementById(`case-${id}`)?.scrollIntoView({ behavior: "smooth" }), 80); };
@@ -97,7 +93,7 @@ export function PortfolioExperience() {
   return <main>
     <header className="site-header"><a href="#top" className="site-mark">YAN / 2026</a><nav><a href="#work">WORK</a><a href="#more-work">MORE</a><a href="#about">ABOUT</a></nav><a className="header-contact" href="mailto:yan18960824862@outlook.com">CONTACT ↗</a></header>
     <Intro /><LongPoster onSelect={setSelectedTag} activeProject={openedProject} />
-    {tagProject && <LanyardTag project={tagProject} onClose={() => setSelectedTag(null)} onEnter={enterSelectedProject} />}
+    {tagProject && <LanyardTag key={tagProject.id} project={tagProject} onClose={() => setSelectedTag(null)} onEnter={enterSelectedProject} />}
 
     {openedProject === "space-field" && <section id="case-space-field" className="case-section case-space space-field-detail">
       <header className="space-field-header"><div><span>01</span><h2>SPACE &amp; FIELD</h2><strong>空间与场域主视觉</strong></div><aside><span>AI CODING / GENERATIVE VISUAL / REAL-TIME</span><span>AI 编程 · 生成式视觉 · 实时生成</span></aside></header>
@@ -111,29 +107,29 @@ export function PortfolioExperience() {
 
     {openedProject === "graduation-vj" && <section id="case-graduation-vj" className="case-section project-detail case-vj">
       <ProjectDetailHeader number="02" title="GRADUATION VJ" chinese="毕业展开幕式 VJ 视觉" method="GENERATIVE VISUAL / AUDIO-REACTIVE / REAL-TIME" methodCn="生成式视觉 · 音频响应 · 实时交互" cover={projects[1].cover} link={projects[1].link} />
-      <WorkflowNote steps={["先确定开幕式的整体视觉方向和动态语言","结合 Blender 和 TouchDesigner 制作不同的动态视觉素材","用 AI 辅助写代码，把视觉做成可以响应音乐的交互网页","根据音乐和现场节奏继续调整画面与动态","最后整理、剪辑成开幕式大屏播放的视频"]} />
+      <WorkflowNote steps={projects[1].workflow} />
       <section className="real-tool-section"><div><span>REAL INTERACTIVE VJ WEBSITE</span><p>这里直接展示项目中真实使用的交互网页，保留原始画面、控件、动画与实时变化。最终输出整理为完整视频，在开幕式大屏播放。</p></div><iframe src="/vj-live/index.html" title="Graduation VJ interactive website" loading="lazy" allow="autoplay" /></section>
       <section className="project-final-output"><header><span>FINAL OUTPUT</span><p>最终将视觉整理为完整视频，用于毕业展开幕式现场大屏播放。</p></header><div className="single-image-flow">{[1,2,3,4,5].map((i) => <img key={i} src={`/assets/vj/frame-0${i}.png`} alt={`VJ 画面 ${i}`} />)}</div><div className="stage-results"><img src="/assets/vj/stage-02.png" alt="开幕式大屏现场 2" /><img src="/assets/vj/stage-03.png" alt="开幕式大屏现场 3" /></div><CaseLink href={projects[1].link} label="WATCH LIVE VIDEO ↗" /></section><NextProject current="graduation-vj" />
     </section>}
 
     {openedProject === "scenova" && <section id="case-scenova" className="case-section project-detail case-drone"><ProjectDetailHeader number="03" title="SCENOVA" chinese="三维扫描无人机" method="DESIGN EXPLORATION / REFINEMENT / VISUALIZATION" methodCn="方案探索 · 方案深化 · 产品可视化" cover={projects[2].cover} link={projects[2].link} />
-      <WorkflowNote steps={["先明确无人机的目标应用场景、需要解决的问题和功能需求","根据已有内部结构，分别研究散热位置、卡扣形式、外壳形态和组合方式","利用 AI 快速生成大量设计方向，把不同可能性尽量铺开","从大量结果里筛选真正有价值的部分，继续调整比例、结构关系和外观语言","最终继续完成整体视觉呈现与项目输出"]} />
+      <WorkflowNote steps={projects[2].workflow} />
       <div className="drone-compare"><figure><img src="/assets/drone/internal-frame.png" alt="Original fixed internal frame" /><figcaption>WHAT I HAD / 固定内部框架</figcaption></figure><figure><img src="/assets/drone/design-focus.jpg" alt="Final shell views" /><figcaption>WHAT REMAINED / 最终外壳方向</figcaption></figure></div><figure className="full-board"><img src="/assets/drone/final-board.jpg" alt="SceNova final presentation board" /><figcaption>FINAL BOARD / 图片保持原比例</figcaption></figure><NextProject current="scenova" />
     </section>}
 
     {openedProject === "morning-tea" && <section id="case-morning-tea" className="case-section project-detail case-tea"><ProjectDetailHeader number="04" title="MORNING TEA ARENA" chinese="《饮茶争先啦》早茶全运会" method="CHARACTER GENERATION / IP VISUAL / CULTURAL PRODUCTS" methodCn="角色生成 · IP 视觉 · 文创产品设计" cover={projects[3].cover} link={projects[3].link} />
-      <WorkflowNote steps={["从广式早茶和全运会两个主题出发，搭建整个 IP 的世界观","把蒸笼设定成运动场，把不同的早茶变成运动员","使用 AI 快速探索角色造型、表情和不同视觉方向","继续完善角色背景、人物关系和故事设定，形成完整的 IP 世界","最后延展到盲盒、包袋以及不同的文创产品"]} />
+      <WorkflowNote steps={projects[3].workflow} />
       <div className="tea-gallery"><img src="/assets/tea/01.webp" alt="Morning Tea Arena concept" /><img src="/assets/tea/02.webp" alt="Character system" /><img src="/assets/tea/03.jpg" alt="Final board" /><img src="/assets/tea/04.webp" alt="Product applications" /></div><div className="award-line"><img src="/assets/tea/award.png" alt="Award certificate" /><p>珠江浪涌绘湾区·十五运体育文创优秀作品和案例评选大赛 / 一等奖</p></div><NextProject current="morning-tea" />
     </section>}
 
     {openedProject === "liminal-maze" && <section id="case-liminal-maze" className="case-section project-detail case-mapping"><ProjectDetailHeader number="05" title="TOKYO LIGHT & ART FESTIVAL" chinese="东京光影艺术节" method="BLENDER 3D / AI VIDEO GENERATION" methodCn="Blender 三维建模 · AI 视频生成" cover={projects[4].cover} link={projects[4].link} />
-      <WorkflowNote steps={["先在 Blender 中搭建三维场景，确定空间结构、构图和镜头运动","将 Blender 渲染出来的视频和图片，直接作为 AI 视频生成的输入参考","在已经确定的空间与镜头基础上，继续使用 AI 生成动态影像","根据音乐进行卡点剪辑","通过蒙版处理，制作成最终可以用于投影的视频"]} />
+      <WorkflowNote steps={projects[4].workflow} />
       <section className="project-final-output"><header><span>FINAL OUTPUT</span></header><div className="mapping-gallery"><img src="/assets/mapping/video-cover.webp" alt="Tokyo Light and Art Festival video cover" /><img src="/assets/mapping/02.png" alt="Tokyo Light and Art Festival scene 2" /><img src="/assets/mapping/03.png" alt="Tokyo Light and Art Festival scene 3" /><img src="/assets/mapping/04.png" alt="Tokyo Light and Art Festival scene 4" /></div><CaseLink href={projects[4].link} label="VIEW FILM" /></section>
       <aside className="related-space-work"><div><p>RELATED SPACE WORK</p><h3>《光御华盏》</h3><span>空间影像 / 2026</span></div><a href="https://xhslink.cn/o/5Q1LggZRKbA" target="_blank" rel="noreferrer"><img src="/assets/light/01.png" alt="Light related spatial work" /><span>OPEN ↗</span></a></aside><NextProject current="liminal-maze" />
     </section>}
 
     {openedProject === "guozi" && <section id="case-guozi" className="case-section project-detail case-guozi"><ProjectDetailHeader number="06" title="GUOZI" chinese="二手玫瑰《果子》MV" method="IMAGE GENERATION / VIDEO GENERATION / MUSIC-DRIVEN STORYTELLING" methodCn="AI 生图 · AI 视频生成 · 音乐驱动叙事" cover={projects[5].cover} link={projects[5].link} />
-      <WorkflowNote steps={["先从二手玫瑰《果子》的音乐出发，根据音乐的情绪和节奏确定一个初步的故事方向","使用 AI 生图，寻找人物、场景和关键视觉","生成过程中出现的新画面，也会反过来影响和改变故事的发展","确定视觉方向后，继续将关键画面生成动态镜头","最后通过剪辑，把故事、画面和音乐重新组织成完整 MV"]} />
+      <WorkflowNote steps={projects[5].workflow} />
       <section className="project-final-output"><header><span>FINAL MV</span></header><FilmDissolve /><CaseLink href={projects[5].link} label="VIEW FILM" /></section><NextProject current="guozi" />
     </section>}
 

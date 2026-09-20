@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { InteractiveProjectIcon } from "./InteractiveProjectIcon";
 
 export type PosterProject = { number: string; id: string; title: string; chineseTitle: string; method: string; chineseMethod: string; src: string; anchor: number; side: "left" | "right"; size: "small" | "medium" | "large" };
 
@@ -21,7 +22,7 @@ export function LongPoster({ onSelect, activeProject }: { onSelect: (project: Po
     <p className="poster-title">SELECTED WORK / CLICK A BEAD OBJECT</p>
     <nav className="poster-index" aria-label="Selected work index">{posterProjects.map((project, index) => <button key={project.id} className={visibleActive === index ? "is-active" : ""} onClick={() => document.getElementById(`poster-${project.id}`)?.scrollIntoView({ behavior: "smooth" })}>{project.number}</button>)}</nav>
     {posterProjects.map((project, index) => <article id={`poster-${project.id}`} className={`poster-object poster-object-${project.side} poster-object-${project.size} ${visibleActive === index ? "is-active" : ""}`} key={project.id} onPointerEnter={() => setActive(index)}>
-      <button className="bead-object-button" onClick={() => onSelect(project)} aria-label={`Open ${project.title} project tag`}><img src={project.src} alt="" /><span className="bead-object-label"><b>{project.number}</b><span className="project-title-en">{project.title}</span><span className="project-title-cn">{project.chineseTitle}</span><small>{project.method}</small><small>{project.chineseMethod}</small></span></button>
+      <button className="bead-object-button" onClick={() => onSelect(project)} aria-label={`Open ${project.title} project tag`}><InteractiveProjectIcon src={project.src} previewSrc={`/assets/project-marks/${project.id}-sticker.png`} /><span className="bead-object-label"><b>{project.number}</b><span className="project-title-en">{project.title}</span><span className="project-title-cn">{project.chineseTitle}</span><small>{project.method}</small><small>{project.chineseMethod}</small></span></button>
     </article>)}
   </section>;
 }
